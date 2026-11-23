@@ -1,26 +1,31 @@
 #!/usr/bin/env python3
-"""Entrypoint for news-image-20261122 V1 (ATM).
+"""Hand the finished front page to the runner.
 
-Copies the pre-rendered entry.png (drawn by render.py in this session)
-to the output directory the grader provides. Standard library only, no
-network, no clock, no randomness: the output is byte-identical every run.
+The picture itself is drawn by render.py and stored in this folder as
+entry.png. This file only moves that image into the directory the
+grader names, so the run stays byte-identical and free of clocks,
+network calls and chance.
 """
-import os
-import shutil
-import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(HERE, "entry.png")
+from pathlib import Path
+
+FOLDER = Path(__file__).resolve().parent
+PICTURE = FOLDER / "entry.png"
 
 
-def main():
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "out")
-    os.makedirs(out_dir, exist_ok=True)
-    dst = os.path.join(out_dir, "entry.png")
-    shutil.copyfile(SRC, dst)
-    print("wrote", dst)
+def place_picture() -> int:
+    """Copy entry.png into the grader's output folder and report it."""
+    import os
+
+    target_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "out"))
+    target = target_dir / "entry.png"
+    if not PICTURE.is_file():
+        raise SystemExit(f"missing picture: {PICTURE}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(PICTURE.read_bytes())
+    print(f"placed {target} ({target.stat().st_size} bytes)")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(place_picture())
